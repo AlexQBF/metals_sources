@@ -2,7 +2,8 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f4f1ea">
 <title>Каталог источников по рынку драгоценных металлов</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -102,14 +103,63 @@
   footer { padding: 32px 0 60px; border-top: 1px solid var(--line); margin-top: 44px; color: var(--ink-faint); font-size: 12.5px; }
 
   @media (max-width: 720px) {
+    .wrap { padding: 0 16px; }
+    header { padding: 32px 0 18px; }
+    h1 { font-size: 24px; }
+    .lede { font-size: 14px; }
+
+    /* Вкладки: компактнее, чтобы три влезли в ряд */
+    .tabs { gap: 2px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab { font-size: 13px; padding: 11px 10px; gap: 6px; white-space: nowrap; flex-shrink: 0; }
+    .tab .count { font-size: 10px; padding: 2px 6px; }
+
+    .group { margin-top: 22px; }
+    .group-title { font-size: 16px; }
+    .group-note { margin-left: 0; font-size: 12.5px; }
+    .group-head { gap: 9px; }
+    .group-num { width: 22px; height: 22px; font-size: 12px; }
+
+    /* Таблица -> карточки */
     thead { display: none; }
     .num { display: none; }
-    .group-note { margin-left: 0; }
-    tbody td { display: block; padding: 2px 14px; }
-    tbody tr { display: block; border-bottom: 1px solid var(--line); padding: 10px 0; }
-    td.site-cell { padding-top: 10px; }
-    td.desc-cell { padding-bottom: 10px; }
-    td.subs { text-align: left; padding-bottom: 10px; }
+    table, tbody, tr, td, colgroup, col { display: block; width: auto; }
+    .tbl-wrap { border-radius: 10px; }
+    tbody tr {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    tbody tr:hover { background: transparent; }
+    tbody td { padding: 0; border: none; }
+
+    /* Название канала/ресурса — крупно сверху */
+    td .name { font-size: 15.5px; margin-bottom: 3px; }
+    /* Ссылка на сайт/канал — под названием */
+    td.site-cell { margin-bottom: 7px; }
+    td.site-cell a { font-size: 12.5px; }
+    /* Описание */
+    td.desc-cell .desc { font-size: 13.5px; color: var(--ink-dim); }
+    /* Подписчики — отдельной строкой с подписью */
+    td.subs { text-align: left; margin-top: 7px; font-size: 13px; }
+    td.subs:not(:empty)::before {
+      content: 'Подписчики: ';
+      color: var(--ink-faint);
+      font-family: 'Manrope', sans-serif;
+      font-size: 12px;
+    }
+    /* Порядок внутри карточки: название -> ссылка -> описание -> подписчики */
+    tbody tr { display: flex; flex-direction: column; }
+    td.site-cell { order: 2; }
+    td.name-cell { order: 1; }
+    td.desc-cell { order: 3; }
+    td.subs { order: 4; }
+
+    footer { padding: 24px 0 48px; font-size: 12px; }
+  }
+
+  /* iPhone notch / safe-area */
+  @supports (padding: max(0px)) {
+    .wrap { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
   }
 </style>
 </head>
@@ -185,7 +235,7 @@ const DATA = {
     },
     {
       title: "Дополнительные, retail и платные источники",
-      note: "retail/инвестиционное направление и платные маркетинговые отчёты.",
+      note: "Retail/инвестиционное направление и платные маркетинговые отчёты.",
       rows: [
         ["zolotoy-zapas.ru", "Золотой Запас", "Новости и аналитика по золоту, серебру, инвестиционным монетам и слиткам."],
         ["businesstat.ru", "BusinesStat", "Платные маркетинговые отчёты."],
@@ -330,13 +380,13 @@ function render() {
           } else {
             html += '<td class="site-cell"><span class="tg-pending">—</span></td>';
           }
-          html += '<td><div class="name">' + esc(r[1]) + '</div></td>';
+          html += '<td class="name-cell"><div class="name">' + esc(r[1]) + '</div></td>';
           html += '<td class="desc-cell"><div class="desc">' + esc(r[2]) + '</div></td>';
           html += '<td class="subs">' + esc(fmtSubs(r[3])) + '</td>';
         } else {
           const href = (r[3] && r[3].trim()) ? siteURL(r[3]) : siteURL(r[0]);
           html += '<td class="site-cell"><a href="' + href + '" target="_blank" rel="noopener">' + esc(r[0]) + '</a></td>';
-          html += '<td><div class="name">' + esc(r[1]) + '</div></td>';
+          html += '<td class="name-cell"><div class="name">' + esc(r[1]) + '</div></td>';
           html += '<td class="desc-cell"><div class="desc">' + esc(r[2]) + '</div></td>';
         }
         html += '</tr>';
