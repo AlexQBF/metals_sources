@@ -169,11 +169,10 @@ def make_digest_stub(items):
         return "За последние сутки материалов не собрано."
     lines = ["<b>⚠️ Тестовый режим (ИИ не подключён)</b>",
              "Сырой список собранных материалов без фильтрации:\n"]
-    for it in items[:30]:
+    for it in items[:40]:
         title = html.escape(it["title"])
         src = html.escape(it["source"])
-        link = html.escape(it["link"])
-        lines.append(f"• <a href=\"{link}\">{title}</a> ({src})")
+        lines.append(f"• {title} ({src})")
     return "\n".join(lines)
 
 
@@ -186,10 +185,25 @@ def send_to_telegram(text):
         return
 
     # Telegram ограничивает сообщение ~4096 символами — режем на части
+    # аккуратно по границам строк, чтобы не рвать текст посреди фразы.
+    LIMIT = 3800
     chunks = []
-    while text:
-        chunks.append(text[:3800])
-        text = text[3800:]
+    current = ""
+    for line in text.split("\n"):
+        # если одна строка сама по себе длиннее лимита — режем её жёстко
+        while len(line) > LIMIT:
+            if current:
+                chunks.append(current)
+                current = ""
+            chunks.append(line[:LIMIT])
+            line = line[LIMIT:]
+        if len(current) + len(line) + 1 > LIMIT:
+            chunks.append(current)
+            current = line
+        else:
+            current = current + "\n" + line if current else line
+    if current:
+        chunks.append(current)
 
     for chunk in chunks:
         resp = requests.post(
