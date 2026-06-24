@@ -1,0 +1,17 @@
+{
+  "_comment": "RSS-ленты для бота-дайджеста по золоту и серебру. enabled=false временно отключает ленту без удаления. Если в логах лента стабильно даёт 'получено 0' или 'не похож на RSS' — адрес битый, замени или отключи.",
+
+  "ru": [
+    { "name": "Банк России — новости",     "url": "https://www.cbr.ru/rss/RssNews",   "enabled": true },
+    { "name": "Банк России — пресс-релизы", "url": "https://www.cbr.ru/rss/RssPress",  "enabled": true },
+    { "name": "Банк России — события",      "url": "https://www.cbr.ru/rss/eventrss",  "enabled": true }
+  ],
+
+  "intl": [
+    { "name": "Kitco — Mining",         "url": "https://www.kitco.com/news/category/mining/rss", "enabled": true },
+    { "name": "World Gold Council",     "url": "https://www.gold.org/rss",                       "enabled": true },
+    { "name": "Mining.com",             "url": "https://www.mining.com/feed/",                   "enabled": true },
+    { "name": "Mining Weekly — Gold",   "url": "https://www.miningweekly.com/page/gold/rss",     "enabled": true },
+    { "name": "Mining Weekly — Silver", "url": "https://www.miningweekly.com/page/silver/rss",   "enabled": true }
+  ]
+}
