@@ -1,12 +1,14 @@
 name: Daily Metals Digest
 
-# Когда запускать
 on:
   schedule:
-    # ВНИМАНИЕ: время в cron указывается в UTC.
-    # 06:00 UTC = 09:00 по Москве (МСК = UTC+3).
+    # 06:00 UTC = 09:00 МСК. ВНИМАНИЕ: GitHub может запускать с задержкой 5-30 мин,
+    # а при простое репозитория расписание иногда приостанавливается (см. примечание ниже).
     - cron: "0 6 * * *"
-  workflow_dispatch:   # позволяет запускать вручную кнопкой "Run workflow" в разделе Actions
+  workflow_dispatch:   # ручной запуск кнопкой Run workflow
+
+permissions:
+  contents: write      # нужно, чтобы бот мог сохранять журналы и архив обратно в репозиторий
 
 jobs:
   build-digest:
@@ -31,3 +33,11 @@ jobs:
           AI_BASE_URL: ${{ secrets.AI_BASE_URL }}
           AI_MODEL: ${{ secrets.AI_MODEL }}
         run: python digest.py
+
+      - name: Сохранить журналы и архив обратно в репозиторий
+        run: |
+          git config user.name "digest-bot"
+          git config user.email "bot@users.noreplymail.github.com"
+          git add sent.json recent_digests.json digests/ 2>/dev/null || true
+          git commit -m "Обновление журналов дайджеста $(date -u +%Y-%m-%d)" || echo "Нет изменений для коммита"
+          git push || echo "Нечего пушить"
