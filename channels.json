@@ -1,0 +1,20 @@
+{
+  "_comment": "Список Telegram-каналов для дайджеста. Указывается @username (без @ тоже можно). Бот читает публичную веб-версию t.me/s/<username> и берёт последний пост. enabled=false временно отключает канал.",
+
+  "channels": [
+    { "name": "Антидот",                          "username": "awatum",           "enabled": true },
+    { "name": "Нержавейка",                        "username": "nerzhavey",        "enabled": true },
+    { "name": "Горная промышленность, геология",   "username": "rosmining_ru",     "enabled": true },
+    { "name": "Металл и Минерал",                  "username": "Metals_Mining",    "enabled": true },
+    { "name": "ПРОметалл",                         "username": "prometallinfo",    "enabled": true },
+    { "name": "РОСНЕДРА",                           "username": "rosnedragovru",    "enabled": true },
+    { "name": "МеталлургЪ",                         "username": "MetallurgyNow",    "enabled": true },
+    { "name": "НедраДВ",                            "username": "nedradvnews",      "enabled": true },
+    { "name": "MetallPlace",                        "username": "metallplace",      "enabled": true },
+    { "name": "НЕДРА ЗАКОНА",                       "username": "nedrazakona",      "enabled": true },
+    { "name": "Золото и Технологии",                "username": "zolteh",           "enabled": true },
+    { "name": "Глобус | Горная промышленность",     "username": "globus_vnedra",    "enabled": true },
+    { "name": "MetalTorg.ru новости",               "username": "metaltorgnews",    "enabled": true },
+    { "name": "РА РУСМЕТ",                           "username": "ra_rusmet",        "enabled": true }
+  ]
+}
