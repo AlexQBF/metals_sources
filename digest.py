@@ -204,13 +204,28 @@ def make_digest_ai(posts, recent_topics):
         ],
         "temperature": 0.4,
     }
-    resp = requests.post(
-        f"{AI_BASE}/chat/completions",
-        headers={"Authorization": f"Bearer {AI_KEY}", "Content-Type": "application/json"},
-        json=payload, timeout=120,
-    )
-    resp.raise_for_status()
-    return resp.json()["choices"][0]["message"]["content"].strip()
+    last_err = None
+    for attempt in range(1, 4):  # до 3 попыток
+        try:
+            resp = requests.post(
+                f"{AI_BASE}/chat/completions",
+                headers={"Authorization": f"Bearer {AI_KEY}", "Content-Type": "application/json"},
+                json=payload, timeout=120,
+            )
+            # 5xx — сервер Gemini временно недоступен, пробуем ещё раз
+            if resp.status_code >= 500:
+                last_err = f"HTTP {resp.status_code}"
+                print(f"[i] Gemini вернул {resp.status_code}, попытка {attempt}/3, жду {attempt*5} c…")
+                time.sleep(attempt * 5)
+                continue
+            resp.raise_for_status()
+            return resp.json()["choices"][0]["message"]["content"].strip()
+        except requests.exceptions.RequestException as e:
+            last_err = str(e)
+            print(f"[i] Сбой запроса к Gemini (попытка {attempt}/3): {e}")
+            time.sleep(attempt * 5)
+    # все попытки исчерпаны
+    raise RuntimeError(f"Gemini недоступен после 3 попыток: {last_err}")
 
 
 def make_stub(posts):
@@ -311,27 +326,32 @@ def main():
     print(f"[i] Каналов: {len(channels)}, в памяти отправленных: {len(sent_ids)}")
     posts = collect_all(channels, sent_ids)
 
+    ai_failed = False
     if AI_KEY:
         try:
             body = make_digest_ai(posts, recent.get("topics", []))
         except Exception as e:
-            print(f"[!] Ошибка Gemini: {e} — отправляю заглушку.")
-            body = make_stub(posts)
+            print(f"[!] Ошибка Gemini: {e}")
+            ai_failed = True
+            body = ("⚠️ Дайджест временно недоступен: сервис ИИ перегружен и не ответил. "
+                    "Следующая попытка — в очередном запуске.")
     else:
         body = make_stub(posts)
 
     if body.strip() == "НЕТ_НОВОСТЕЙ":
         body = "За последние сутки существенных новостей по золоту и серебру не найдено."
 
-    # котировки в конец дайджеста
-    prices = fetch_prices()
-    if prices:
-        body = body + "\n" + prices
+    # котировки в конец дайджеста (только если дайджест сформирован)
+    if not ai_failed:
+        prices = fetch_prices()
+        if prices:
+            body = body + "\n" + prices
 
     send_to_telegram(header + body)
 
     # --- обновляем журналы ---
-    new_ids = [p["id"] for p in posts if p["id"]]
+    # если ИИ упал — НЕ помечаем посты как отправленные, чтобы обработать их в след. раз
+    new_ids = [] if ai_failed else [p["id"] for p in posts if p["id"]]
     sent_ids.update(new_ids)
     # храним последние ~2000 id, чтобы файл не рос бесконечно
     save_json(SENT_FILE, {"ids": list(sent_ids)[-2000:]})
