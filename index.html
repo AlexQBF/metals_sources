@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f4f1ea">
+<title>Каталог источников по рынку драгоценных металлов</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #f4f1ea;
+    --panel: #ffffff;
+    --ink: #161310;
+    --ink-dim: #4a443a;
+    --ink-faint: #8a8170;
+    --gold: #9a6b12;
+    --gold-bright: #c98a1a;
+    --line: #ddd6c7;
+    --line-soft: #ebe6da;
+    --ru: #c2541d;
+    --intl: #1f7a66;
+    --hover: #f7f3ea;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Manrope', sans-serif;
+    line-height: 1.5;
+    font-size: 15px;
+  }
+
+  .wrap { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
+
+  header { padding: 48px 0 24px; }
+  h1 { font-size: clamp(26px, 4vw, 36px); font-weight: 700; letter-spacing: -.02em; }
+  .lede { margin-top: 12px; width: 100%; color: var(--ink-dim); font-size: 15px; }
+
+  .tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--line); margin: 26px 0 0; }
+  .tab {
+    font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 600;
+    cursor: pointer; background: transparent; border: none; color: var(--ink-faint);
+    padding: 12px 18px; border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: all .15s ease; display: flex; align-items: center; gap: 9px;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.active { color: var(--ink); border-bottom-color: var(--gold-bright); }
+  .tab .count {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+    background: var(--line-soft); color: var(--ink-faint); padding: 2px 7px; border-radius: 100px;
+  }
+  .tab.active .count { background: rgba(201,138,26,.18); color: var(--gold); }
+
+  .panel-tab { display: none; }
+  .panel-tab.active { display: block; }
+
+  .group { margin-top: 30px; }
+  .group-head { display: flex; align-items: center; gap: 11px; margin-bottom: 11px; }
+  .group-num {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600;
+    color: #fff; width: 24px; height: 24px; border-radius: 6px; display: inline-flex;
+    align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .group-title { font-size: 18px; font-weight: 700; }
+  .group-note { color: var(--ink-faint); font-size: 13px; margin: -4px 0 11px 35px; max-width: 90ch; }
+  #panel-ru .group-num { background: var(--ru); }
+  #panel-intl .group-num { background: var(--intl); }
+  #panel-tg .group-num { background: #3a8fd0; }
+
+  .tbl-wrap { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    text-align: left; font-size: 11.5px; letter-spacing: .03em; text-transform: uppercase;
+    color: var(--ink-faint); padding: 11px 16px; border-bottom: 1px solid var(--line);
+    background: var(--line-soft); font-weight: 600; white-space: nowrap;
+  }
+  tbody td { padding: 12px 16px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--hover); }
+
+  .num { color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; font-size: 12px; text-align: right; }
+
+  td.site-cell a { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; color: var(--gold); text-decoration: none; border-bottom: 1.5px solid rgba(154,107,18,.35); padding-bottom: 1px; transition: all .15s ease; word-break: break-word; }
+  td.site-cell a:hover { color: var(--gold-bright); border-bottom-color: var(--gold-bright); }
+  .tg-pending { color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  td .name { font-weight: 600; font-size: 14px; }
+  td .desc { font-size: 14px; line-height: 1.45; }
+
+  col.c-num { width: 4%; }
+  col.c-site { width: 19%; }
+  col.c-name { width: 23%; }
+  col.c-desc { width: 54%; }
+
+  col.c-tg-site { width: 17%; }
+  col.c-tg-name { width: 22%; }
+  col.c-tg-desc { width: 41%; }
+  col.c-tg-subs { width: 16%; }
+  td.subs { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-dim); text-align: right; white-space: nowrap; }
+
+  footer { padding: 32px 0 60px; border-top: 1px solid var(--line); margin-top: 44px; color: var(--ink-faint); font-size: 12.5px; }
+
+  @media (max-width: 720px) {
+    .wrap { padding: 0 16px; }
+    header { padding: 32px 0 18px; }
+    h1 { font-size: 24px; }
+    .lede { font-size: 14px; }
+
+    /* Вкладки: компактнее, чтобы три влезли в ряд */
+    .tabs { gap: 2px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab { font-size: 13px; padding: 11px 10px; gap: 6px; white-space: nowrap; flex-shrink: 0; }
+    .tab .count { font-size: 10px; padding: 2px 6px; }
+
+    .group { margin-top: 22px; }
+    .group-title { font-size: 16px; }
+    .group-note { margin-left: 0; font-size: 12.5px; }
+    .group-head { gap: 9px; }
+    .group-num { width: 22px; height: 22px; font-size: 12px; }
+
+    /* Таблица -> карточки */
+    thead { display: none; }
+    .num { display: none; }
+    table, tbody, tr, td, colgroup, col { display: block; width: auto; }
+    .tbl-wrap { border-radius: 10px; }
+    tbody tr {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    tbody tr:hover { background: transparent; }
+    tbody td { padding: 0; border: none; }
+
+    /* Название канала/ресурса — крупно сверху */
+    td .name { font-size: 15.5px; margin-bottom: 3px; }
+    /* Ссылка на сайт/канал — под названием */
+    td.site-cell { margin-bottom: 7px; }
+    td.site-cell a { font-size: 12.5px; }
+    /* Описание */
+    td.desc-cell .desc { font-size: 13.5px; color: var(--ink-dim); }
+    /* Подписчики — отдельной строкой с подписью */
+    td.subs { text-align: left; margin-top: 7px; font-size: 13px; }
+    td.subs:not(:empty)::before {
+      content: 'Подписчики: ';
+      color: var(--ink-faint);
+      font-family: 'Manrope', sans-serif;
+      font-size: 12px;
+    }
+    /* Порядок внутри карточки: название -> ссылка -> описание -> подписчики */
+    tbody tr { display: flex; flex-direction: column; }
+    td.site-cell { order: 2; }
+    td.name-cell { order: 1; }
+    td.desc-cell { order: 3; }
+    td.subs { order: 4; }
+
+    footer { padding: 24px 0 48px; font-size: 12px; }
+  }
+
+  /* iPhone notch / safe-area */
+  @supports (padding: max(0px)) {
+    .wrap { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Каталог источников по рынку драгоценных металлов</h1>
+    <p class="lede">Список ресурсов для мониторинга рынка драгметаллов: отраслевая аналитика, деловые СМИ, биржи и котировки, регуляторика, макроэкономические прогнозы и платные аналитические провайдеры.</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-region="ru" onclick="switchTab('ru')">Российские источники <span class="count" id="count-ru"></span></button>
+    <button class="tab" data-region="intl" onclick="switchTab('intl')">Зарубежные источники <span class="count" id="count-intl"></span></button>
+    <button class="tab" data-region="tg" onclick="switchTab('tg')">Telegram-каналы <span class="count" id="count-tg"></span></button>
+  </div>
+
+  <div class="panel-tab active" id="panel-ru"></div>
+  <div class="panel-tab" id="panel-intl"></div>
+  <div class="panel-tab" id="panel-tg"></div>
+
+  <footer>Каталог структурирован по типам источников. Источники с пометкой «платно» требуют подписки или покупки отчётов.</footer>
+
+</div>
+
+<script>
+// Структура: регион -> [ {title, note, rows: [[site, name, desc], ...]} ]
+const DATA = {
+  ru: [
+    {
+      title: "Основные отраслевые и аналитические источники",
+      note: "",
+      rows: [
+        ["zolteh.ru", "Золото и технологии", "Профильный отраслевой журнал и портал по золотодобыче: компании, проекты, производство, обзоры рынка и итоги по кварталам."],
+        ["nedradv.ru", "NEDRADV", "Новостной портал о недропользовании: золото, аукционы, лицензии, месторождения. Сильный фокус на Дальнем Востоке и Сибири."],
+        ["dprom.online", "Добывающая промышленность", "Отраслевой журнал по добыче полезных ископаемых, включая золото: компании, технологии, регионы, проекты."],
+        ["goldminingunion.ru", "Союз золотопромышленников России", "Отраслевая ассоциация. Полезна для новостей отрасли, позиции участников рынка, ссылок на аналитику и нормативку."],
+        ["metaltorg.ru", "Металлторг", "Новости и обзоры по металлургии и рынкам металлов."]
+      ]
+    },
+    {
+      title: "Деловые СМИ и новостной мониторинг",
+      note: "",
+      rows: [
+        ["interfax.ru", "Интерфакс", "Один из самых полезных источников для новостей по компаниям, добыче, сделкам, регулированию и государственным решениям."],
+        ["kommersant.ru", "Коммерсантъ", "Деловой контекст, новости компаний, экспорт, санкции, регулирование, крупные сделки."],
+        ["vedomosti.ru", "Ведомости", "Деловая аналитика, корпоративные новости, сырьевой и макроэкономический контекст."],
+        ["rbc.ru", "РБК", "Новости, макроэкономика, компании, рынок, санкции, государственное регулирование."]
+      ]
+    },
+    {
+      title: "Брокерская и инвестиционная аналитика",
+      note: "",
+      rows: [
+        ["moex.com", "Московская биржа (MOEX)", "Главная российская площадка торгов золотом, серебром, платиной и палладием: котировки, фьючерсы, объёмы, рыночная инфраструктура РФ.", "moex.com/preciousmetals"],
+        ["bcs-express.ru", "БКС Экспресс", "Комментарии по золоту, серебру, акциям золотодобытчиков, макроэкономике и рынку."],
+        ["finam.ru", "Финам", "Рыночные обзоры, инвестидеи, комментарии по драгметаллам и акциям сектора."],
+        ["tbank.ru", "Т-Инвестиции", "Инвестиционная аналитика, рыночные комментарии, обзоры сырьевых активов.", "tbank.ru/invest/research/"],
+        ["profinance.ru", "ProFinance", "Котировки, рыночные данные, новости и комментарии."]
+      ]
+    },
+    {
+      title: "Официальные источники РФ — законы и регулирование",
+      note: "Не основные аналитические ресурсы по рынку, полезны для мониторинга законов, регулирования, официальных публикаций и нормативных изменений.",
+      rows: [
+        ["cbr.ru", "Банк России", "Учётные цены на драгметаллы, резервы, финансовое регулирование, макроэкономический фон."],
+        ["minfin.gov.ru", "Минфин РФ", "Нормативное регулирование рынка драгоценных металлов, Гохран, бюджетная и налоговая повестка."],
+        ["gokhran.ru", "Гохран России", "Государственный фонд драгоценных металлов и камней, официальные сообщения по госрезервам и операциям."],
+        ["rosnedra.gov.ru", "Роснедра", "Лицензии, недропользование, ресурсная база, участки, месторождения."],
+        ["rosstat.gov.ru", "Росстат", "Официальная статистика по производству, добыче и промышленности."],
+        ["customs.gov.ru", "ФТС России", "Импорт, экспорт, внешнеторговая статистика."]
+      ]
+    },
+    {
+      title: "Дополнительные, retail и платные источники",
+      note: "Retail/инвестиционное направление и платные маркетинговые отчёты.",
+      rows: [
+        ["zolotoy-zapas.ru", "Золотой Запас", "Новости и аналитика по золоту, серебру, инвестиционным монетам и слиткам."],
+        ["businesstat.ru", "BusinesStat", "Платные маркетинговые отчёты."],
+        ["delprof.ru", "Деловой профиль", "Обзорная аналитика по рынкам, включая золото."],
+        ["roif-expert.ru", "Roif Expert", "Маркетинговые исследования."],
+        ["marketing.rbc.ru", "РБК Исследования рынков", "Платные исследования."]
+      ]
+    }
+  ],
+  intl: [
+    {
+      title: "Основные международные источники",
+      note: "",
+      rows: [
+        ["gold.org", "World Gold Council", "Главный международный источник по рынку золота: спрос, предложение, ETF, центробанки, инвестиционный спрос, квартальные отчёты."],
+        ["silverinstitute.org", "The Silver Institute", "Ключевой источник по рынку серебра: промышленный спрос, инвестиции, ювелирка, физический рынок, annual silver survey."],
+        ["lbma.org.uk", "LBMA", "London Bullion Market Association: стандарты, Good Delivery, London market, бенчмарки, аналитика и структура рынка."],
+        ["metalsfocus.com", "Metals Focus", "Один из главных независимых аналитических провайдеров по золоту, серебру и PGM."],
+        ["cpmgroup.com", "CPM Group", "Сильная независимая аналитика по precious metals: прогнозы, отчёты, инвестиционный и макро-контекст."],
+        ["heraeus.com", "Heraeus Precious Metals", "Регулярные обзоры по всем драгметаллам: золото, серебро и металлы платиновой группы."]
+      ]
+    },
+    {
+      title: "Новости, обзоры и рыночные комментарии",
+      note: "",
+      rows: [
+        ["kitco.com", "Kitco", "Новости, котировки, интервью, рыночные комментарии по золоту, серебру и другим металлам."],
+        ["bullionvault.com", "BullionVault", "Комментарии по золоту и серебру, инвестиционный спрос, физический рынок."],
+        ["mining.com", "Mining.com", "Новости по добыче, горнодобывающим компаниям, проектам, сделкам, странам и сырьевому сектору."],
+        ["investing.com", "Investing.com", "Крупный котировочный портал: цены и фьючерсы на металлы, исторические данные, графики, новости и календарь."],
+        ["tradingeconomics.com", "Trading Economics", "Макроэкономические данные и цены на сырьё: котировки металлов, индикаторы, прогнозы по странам."],
+        ["reuters.com", "Reuters", "Оперативные мировые новости, цены, прогнозы, комментарии аналитиков, макроэкономика и геополитика."],
+        ["bloomberg.com", "Bloomberg", "Новости, рынок, макроэкономика, сырьё, прогнозы, крупные сделки."]
+      ]
+    },
+    {
+      title: "Биржи, котировки и рыночная инфраструктура",
+      note: "",
+      rows: [
+        ["cmegroup.com", "CME Group / COMEX", "Фьючерсы на золото, серебро, платину, палладий. Структура рынка, ликвидность и price discovery."],
+        ["lme.com", "London Metal Exchange", "Платина, палладий, рыночная инфраструктура, бенчмарки."],
+        ["en.sge.com.cn", "Shanghai Gold Exchange", "Китайский рынок золота."]
+      ]
+    },
+    {
+      title: "Макроэкономика и сырьевые прогнозы",
+      note: "",
+      rows: [
+        ["worldbank.org", "World Bank Commodity Markets", "Commodity Markets Outlook, мировые сырьевые прогнозы, макроэкономический контекст."],
+        ["imf.org", "IMF Commodity Prices", "Международные цены на сырьевые товары, макроэкономический фон, инфляция, ставки, доллар."],
+        ["usgs.gov", "USGS", "Геология, добыча, запасы, производство по странам, Mineral Commodity Summaries."]
+      ]
+    },
+    {
+      title: "Дополнительные платные / справочные источники",
+      note: "",
+      rows: [
+        ["statista.com", "Statista", "Быстрые графики и справочные данные."],
+        ["spglobal.com/commodityinsights", "S&P Global Commodity Insights", "Сильная сырьевая аналитика, часто платная."],
+        ["fastmarkets.com", "Fastmarkets", "Профессиональная аналитика по металлам и сырью, в основном платная."],
+        ["argusmedia.com", "Argus Media", "Commodity intelligence, цены, сырьевые рынки, платный доступ."],
+        ["woodmac.com", "Wood Mackenzie", "Глубокая аналитика по mining, commodities, energy transition, платный доступ."],
+        ["crugroup.com", "CRU Group", "Металлы, mining, сырьевая аналитика, платный доступ."]
+      ]
+    }
+  ],
+  tg: [
+    {
+      title: "Telegram-каналы по металлам, недрам и драгметаллам",
+      note: "Отраслевые каналы по металлургии, горной добыче, золотодобыче и регуляторике недр. Количество подписчиков указано примерно.",
+      rows: [
+        ["awatum", "Антидот", "Отраслевой канал по металлургии и горной добыче: новости и аналитика.", "33649"],
+        ["nerzhavey", "Нержавейка", "Один из самых авторитетных каналов о чёрной и цветной металлургии в России и мире (ИД НОМ). Анализ новостей отрасли.", "28536"],
+        ["rosmining_ru", "Горная промышленность, геология, обогащение", "Горное дело, геология и обогащение полезных ископаемых.", "20309"],
+        ["mining_of_russia_official", "Горная промышленность", "Новости горнодобывающей и металлургической отрасли России.", "13700"],
+        ["Metals_Mining", "Металл и Минерал", "Некоммерческий блог: исследования и аналитика рынка горнодобычи и металлургии России, СНГ и мира.", "12137"],
+        ["prometallinfo", "ПРОметалл", "Новости и аналитика по металлургии и рынкам металлов.", "9927"],
+        ["rosnedragovru", "РОСНЕДРА", "Официальный канал Федерального агентства по недропользованию: регуляторика, запасы, лицензии.", "7998"],
+        ["dprom", "Добывающая промышленность онлайн", "Новости добывающей промышленности: проекты, технологии, компании.", "7800"],
+        ["MetallurgyNow", "МеталлургЪ", "Канал о металлургической отрасли.", "6666"],
+        ["nedradvnews", "НедраДВ | nedradv.ru", "Бизнес-портал по недропользованию: золото, аукционы, лицензии, месторождения (фокус на Дальнем Востоке).", "5395"],
+        ["metallplace", "MetallPlace", "Новости и материалы по металлургии.", "4443"],
+        ["nedrazakona", "НЕДРА ЗАКОНА", "Законодательство и регулирование в сфере недропользования. Полезно под мониторинг законов.", "4417"],
+        ["zolteh", "Золото и Технологии | Отраслевые новости", "Отраслевые новости по золоту и золотодобыче от журнала «Золото и технологии».", "3628"],
+        ["globus_vnedra", "Глобус | Горная промышленность", "Геология, добыча и горный бизнес.", "2919"],
+        ["metaltorgnews", "MetalTorg.ru новости", "Новостная лента Металлторг.ру по рынкам металлов.", "1969"],
+        ["ra_rusmet", "РА РУСМЕТ — индексы и аналитика", "Рейтинговое агентство Русмет: индексы и аналитика по металлам, включая лом и драгметаллы.", "1810"],
+        ["NEDRARU", "NEDRARU — Недропользование и инвестиции в недра", "Недропользование, инвестиции в недра, лицензии и проекты.", "1100"]
+      ]
+    }
+  ]
+};
+
+function switchTab(region) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.region === region));
+  document.querySelectorAll('.panel-tab').forEach(p => p.classList.toggle('active', p.id === 'panel-' + region));
+}
+
+function siteURL(site) {
+  const s = site.trim();
+  if (!s) return '#';
+  return /^https?:\/\//.test(s) ? s : 'https://' + s;
+}
+
+function esc(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtSubs(v) {
+  const n = parseInt((v || '').replace(/\D/g,''), 10);
+  if (isNaN(n)) return '';
+  return '≈ ' + n.toLocaleString('ru-RU');
+}
+
+// Telegram-каналы отсортированы по подписчикам по убыванию (статично)
+function render() {
+  ['ru','intl','tg'].forEach(region => {
+    const panel = document.getElementById('panel-' + region);
+    const isTg = region === 'tg';
+    let total = 0;
+    let html = '';
+    DATA[region].forEach((grp, gi) => {
+      let n = 0;
+      html += '<div class="group">';
+      html += '<div class="group-head"><span class="group-num">' + (gi + 1) + '</span><div class="group-title">' + esc(grp.title) + '</div></div>';
+      if (grp.note) html += '<div class="group-note">' + esc(grp.note) + '</div>';
+      html += '<div class="tbl-wrap"><table>';
+      if (isTg) {
+        html += '<colgroup><col class="c-num"><col class="c-tg-site"><col class="c-tg-name"><col class="c-tg-desc"><col class="c-tg-subs"></colgroup>';
+        html += '<thead><tr><th>#</th><th>Канал</th><th>Название</th><th>Описание</th>' +
+                '<th>Подписчики</th></tr></thead><tbody>';
+      } else {
+        html += '<colgroup><col class="c-num"><col class="c-site"><col class="c-name"><col class="c-desc"></colgroup>';
+        html += '<thead><tr><th>#</th><th>Сайт</th><th>Ресурс</th><th>Описание</th></tr></thead><tbody>';
+      }
+      grp.rows.forEach(r => {
+        total++;
+        n++;
+        html += '<tr>';
+        html += '<td class="num">' + n + '</td>';
+        if (isTg) {
+          if (r[0] && r[0].trim()) {
+            const handle = r[0].trim().replace(/^@/, '');
+            html += '<td class="site-cell"><a href="https://t.me/' + esc(handle) + '" target="_blank" rel="noopener">@' + esc(handle) + '</a></td>';
+          } else {
+            html += '<td class="site-cell"><span class="tg-pending">—</span></td>';
+          }
+          html += '<td class="name-cell"><div class="name">' + esc(r[1]) + '</div></td>';
+          html += '<td class="desc-cell"><div class="desc">' + esc(r[2]) + '</div></td>';
+          html += '<td class="subs">' + esc(fmtSubs(r[3])) + '</td>';
+        } else {
+          const href = (r[3] && r[3].trim()) ? siteURL(r[3]) : siteURL(r[0]);
+          html += '<td class="site-cell"><a href="' + href + '" target="_blank" rel="noopener">' + esc(r[0]) + '</a></td>';
+          html += '<td class="name-cell"><div class="name">' + esc(r[1]) + '</div></td>';
+          html += '<td class="desc-cell"><div class="desc">' + esc(r[2]) + '</div></td>';
+        }
+        html += '</tr>';
+      });
+      html += '</tbody></table></div></div>';
+    });
+    panel.innerHTML = html;
+    document.getElementById('count-' + region).textContent = total;
+  });
+}
+
+render();
+</script>
+</body>
+</html>
