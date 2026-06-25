@@ -32,6 +32,7 @@ jobs:
           AI_API_KEY: ${{ secrets.AI_API_KEY }}
           AI_BASE_URL: ${{ secrets.AI_BASE_URL }}
           AI_MODEL: ${{ secrets.AI_MODEL }}
+          METALS_API_KEY: ${{ secrets.METALS_API_KEY }}
         run: python digest.py
 
       - name: Сохранить журналы и архив обратно в репозиторий
