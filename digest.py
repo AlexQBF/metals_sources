@@ -322,7 +322,7 @@ def main():
     months = ["января","февраля","марта","апреля","мая","июня",
               "июля","августа","сентября","октября","ноября","декабря"]
     date_ru = f"{now_msk.day} {months[now_msk.month-1]} {now_msk.year}"
-    header = f"<b>🪙 AU &amp; AG — главное за день</b>  <b>{date_ru}</b>\n\n"
+    header = f"<b>🪙 AU &amp; AG — главное за день</b> | <b>{date_ru}</b>\n\n"
 
     channels = load_channels()
     sent = load_json(SENT_FILE, {"ids": []})
