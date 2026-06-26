@@ -254,19 +254,32 @@ def fetch_prices():
     (USD за тройскую унцию) или None, если не удалось/нет ключа."""
     if not METALS_API_KEY:
         return None
+    # timeseries требует РАЗНЫЕ start и end. Берём вчера..сегодня, а из ответа — вчерашний день.
     yday = (datetime.now(MSK) - timedelta(days=1)).strftime("%Y-%m-%d")
+    today = datetime.now(MSK).strftime("%Y-%m-%d")
     try:
         r = requests.get(
             "https://api.metals.dev/v1/timeseries",
-            params={"api_key": METALS_API_KEY, "start_date": yday, "end_date": yday},
+            params={"api_key": METALS_API_KEY, "start_date": yday, "end_date": today},
             timeout=REQUEST_TIMEOUT,
         )
         if not r.ok:
             print(f"[!] metals.dev: HTTP {r.status_code} {r.text[:200]}")
             return None
         data = r.json()
-        rates = data.get("rates", {})
-        day = rates.get(yday) or (list(rates.values())[0] if rates else {})
+        rates = data.get("rates", {}) or {}
+        if not rates:
+            print(f"[!] metals.dev: нет данных за {yday} (выходной/задержка). Котировки пропущены.")
+            return None
+        # берём именно вчерашний день; если его вдруг нет — последний доступный из ответа
+        day = rates.get(yday)
+        used_date = yday
+        if day is None:
+            try:
+                used_date = sorted(rates.keys())[-1]
+                day = rates[used_date]
+            except Exception:
+                day = {}
         metals = day.get("metals", {}) if isinstance(day, dict) else {}
         gold = metals.get("gold")
         silver = metals.get("silver")
@@ -277,7 +290,7 @@ def fetch_prices():
         def fmt(v):
             return f"{v:,.0f}".replace(",", " ") if v and v >= 100 else (f"{v:,.2f}" if v else "—")
 
-        d = datetime.strptime(yday, "%Y-%m-%d").strftime("%d.%m.%Y")
+        d = datetime.strptime(used_date, "%Y-%m-%d").strftime("%d.%m.%Y")
         lines = ["\n———", f"<i>Котировки на {d}</i>"]
         if gold is not None:
             lines.append(f"<i>Au: {fmt(gold)} $/унц.</i>")
@@ -289,7 +302,25 @@ def fetch_prices():
         return None
 
 # ---------- Отправка в Telegram ----------
+
+def clean_html_for_telegram(text):
+    """Telegram HTML поддерживает только ограниченный набор тегов.
+    Убираем <br> (заменяем на перенос строки) и срезаем все теги,
+    кроме разрешённых <b>, <i>, <u>, <s>, <a>, <code>, <pre>."""
+    import re
+    # <br>, <br/>, <br /> -> перенос строки
+    text = re.sub(r"<\s*br\s*/?\s*>", "\n", text, flags=re.IGNORECASE)
+    # удаляем любые другие неподдерживаемые теги, оставляя их содержимое
+    allowed = {"b", "i", "u", "s", "a", "code", "pre"}
+    def strip_tag(m):
+        tag = m.group(1).lower().lstrip("/")
+        return m.group(0) if tag in allowed else ""
+    text = re.sub(r"</?\s*([a-zA-Z0-9]+)[^>]*>", strip_tag, text)
+    return text
+
+
 def send_to_telegram(text):
+    text = clean_html_for_telegram(text)
     if not TG_TOKEN or not TG_CHAT:
         print("[!] Нет TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID — вывод в лог:")
         print(text)
@@ -322,7 +353,7 @@ def main():
     months = ["января","февраля","марта","апреля","мая","июня",
               "июля","августа","сентября","октября","ноября","декабря"]
     date_ru = f"{now_msk.day} {months[now_msk.month-1]} {now_msk.year}"
-    header = f"<b>🪙 AU &amp; AG — главное за день</b> | <b>{date_ru}</b>\n\n"
+    header = f"<b>🪙 AU &amp; AG — главное за день</b>  <b>{date_ru}</b>\n\n"
 
     channels = load_channels()
     sent = load_json(SENT_FILE, {"ids": []})
