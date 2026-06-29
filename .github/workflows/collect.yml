@@ -1,0 +1,33 @@
+name: Collect Raw Posts (диагностика)
+
+# ТОЛЬКО ручной запуск. Никакого расписания — этот workflow не мешает основному боту.
+on:
+  workflow_dispatch:
+
+# Права только на чтение — этот процесс ничего не коммитит в репозиторий.
+permissions:
+  contents: read
+
+jobs:
+  collect-raw:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Получить код из репозитория
+        uses: actions/checkout@v4
+
+      - name: Установить Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Установить зависимости
+        run: pip install -r requirements.txt
+
+      - name: Собрать сырые посты
+        run: python collect_raw.py
+
+      - name: Выгрузить файл с постами (артефакт для скачивания)
+        uses: actions/upload-artifact@v4
+        with:
+          name: raw-posts
+          path: raw_posts.md
