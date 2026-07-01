@@ -5,7 +5,8 @@
 
 Поток:
   1. Читает список каналов из channels.json
-  2. Для каждого канала берёт посты за последние 24 часа (t.me/s/<username>)
+  2. Для каждого канала берёт посты за окно сбора (по будням 36ч, по понедельникам 72ч
+     — чтобы захватить пятницу-вечер и выходные) через t.me/s/<username>
   3. Отсеивает посты, которые уже отправлялись (журнал sent.json)
   4. Отдаёт новые посты в Gemini: отбор по золоту/серебру, склейка дублей,
      оценка важности, связный дайджест абзацами (с учётом тем прошлых дайджестов)
@@ -217,8 +218,12 @@ def make_digest_ai(posts, recent_topics):
         ],
         "temperature": 0.4,
     }
+    # Паузы между попытками (сек). Всего 4 попытки: перед 2-й ждём 30с, перед 3-й 60с, перед 4-й 90с.
+    # Итого до ~3 минут ожидания, чтобы переждать временную перегрузку Gemini.
+    backoff = [30, 60, 90]
     last_err = None
-    for attempt in range(1, 4):  # до 3 попыток
+    total_attempts = len(backoff) + 1  # = 4
+    for attempt in range(1, total_attempts + 1):
         try:
             resp = requests.post(
                 f"{AI_BASE}/chat/completions",
@@ -228,17 +233,21 @@ def make_digest_ai(posts, recent_topics):
             # 5xx — сервер Gemini временно недоступен, пробуем ещё раз
             if resp.status_code >= 500:
                 last_err = f"HTTP {resp.status_code}"
-                print(f"[i] Gemini вернул {resp.status_code}, попытка {attempt}/3, жду {attempt*5} c…")
-                time.sleep(attempt * 5)
+                if attempt <= len(backoff):
+                    wait = backoff[attempt - 1]
+                    print(f"[i] Gemini вернул {resp.status_code}, попытка {attempt}/{total_attempts}, жду {wait} c…")
+                    time.sleep(wait)
                 continue
             resp.raise_for_status()
             return resp.json()["choices"][0]["message"]["content"].strip()
         except requests.exceptions.RequestException as e:
             last_err = str(e)
-            print(f"[i] Сбой запроса к Gemini (попытка {attempt}/3): {e}")
-            time.sleep(attempt * 5)
+            if attempt <= len(backoff):
+                wait = backoff[attempt - 1]
+                print(f"[i] Сбой запроса к Gemini (попытка {attempt}/{total_attempts}): {e}, жду {wait} c…")
+                time.sleep(wait)
     # все попытки исчерпаны
-    raise RuntimeError(f"Gemini недоступен после 3 попыток: {last_err}")
+    raise RuntimeError(f"Gemini недоступен после {total_attempts} попыток: {last_err}")
 
 
 def make_stub(posts):
