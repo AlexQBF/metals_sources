@@ -36,7 +36,13 @@ CHANNELS_FILE = "channels.json"
 SENT_FILE = "sent.json"                 # журнал отправленных постов (память)
 RECENT_DIGESTS_FILE = "recent_digests.json"  # краткие темы прошлых дайджестов
 DIGESTS_DIR = "digests"                 # архив дайджестов по датам
-HOURS_WINDOW = 36
+# Окно сбора: по понедельникам 72ч (захватить пятницу-вечер + выходные),
+# в остальные будни 36ч. Определяется в момент запуска.
+def get_hours_window():
+    # weekday(): понедельник = 0
+    return 72 if datetime.now(MSK).weekday() == 0 else 36
+
+HOURS_WINDOW = 36  # значение по умолчанию (переопределяется в collect_all)
 MAX_POSTS_TO_AI = 120
 RECENT_DIGESTS_KEEP = 5                 # сколько прошлых дайджестов помнить (скользящее окно)
 REQUEST_TIMEOUT = 20
@@ -124,7 +130,8 @@ def fetch_channel_posts(username, cutoff):
 
 
 def collect_all(channels, sent_ids):
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=HOURS_WINDOW)
+    hours = get_hours_window()
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
     all_posts = []
     for ch in channels:
         try:
@@ -250,42 +257,48 @@ def make_stub(posts):
 
 # ---------- Котировки золота и серебра (metals.dev) ----------
 def fetch_prices():
-    """Возвращает строку с котировками золота и серебра за вчерашний день
-    (USD за тройскую унцию) или None, если не удалось/нет ключа."""
+    """Возвращает строку с котировками золота и серебра на текущий момент
+    (эндпоинт latest, USD за тройскую унцию) или None, если не удалось/нет ключа."""
     if not METALS_API_KEY:
         return None
-    # timeseries требует РАЗНЫЕ start и end. Берём вчера..сегодня, а из ответа — вчерашний день.
-    yday = (datetime.now(MSK) - timedelta(days=1)).strftime("%Y-%m-%d")
-    today = datetime.now(MSK).strftime("%Y-%m-%d")
     try:
         r = requests.get(
-            "https://api.metals.dev/v1/timeseries",
-            params={"api_key": METALS_API_KEY, "start_date": yday, "end_date": today},
+            "https://api.metals.dev/v1/latest",
+            params={"api_key": METALS_API_KEY, "currency": "USD", "unit": "toz"},
             timeout=REQUEST_TIMEOUT,
         )
         if not r.ok:
             print(f"[!] metals.dev: HTTP {r.status_code} {r.text[:200]}")
             return None
         data = r.json()
-        rates = data.get("rates", {}) or {}
-        if not rates:
-            print(f"[!] metals.dev: нет данных за {yday} (выходной/задержка). Котировки пропущены.")
-            return None
-        # берём именно вчерашний день; если его вдруг нет — последний доступный из ответа
-        day = rates.get(yday)
-        used_date = yday
-        if day is None:
-            try:
-                used_date = sorted(rates.keys())[-1]
-                day = rates[used_date]
-            except Exception:
-                day = {}
-        metals = day.get("metals", {}) if isinstance(day, dict) else {}
+        metals = data.get("metals", {}) or {}
         gold = metals.get("gold")
         silver = metals.get("silver")
         if gold is None and silver is None:
             print(f"[!] metals.dev: в ответе нет цен. Ответ: {str(data)[:200]}")
             return None
+
+        # дата цены — из timestamps.metal (например 2026-07-01T14:01:12Z), иначе сегодня по МСК
+        ts = (data.get("timestamps", {}) or {}).get("metal", "")
+        try:
+            # берём дату из ISO-времени и показываем по МСК
+            dt = datetime.fromisoformat(ts.replace("Z", "+00:00")).astimezone(MSK)
+            d = dt.strftime("%d.%m.%Y")
+        except Exception:
+            d = datetime.now(MSK).strftime("%d.%m.%Y")
+
+        def fmt(v):
+            return f"{v:,.0f}".replace(",", " ") if v and v >= 100 else (f"{v:,.2f}" if v else "—")
+
+        lines = ["\n———", f"<i>Котировки на {d}</i>"]
+        if gold is not None:
+            lines.append(f"<i>Au: {fmt(gold)} $/унц.</i>")
+        if silver is not None:
+            lines.append(f"<i>Ag: {fmt(silver)} $/унц.</i>")
+        return "\n".join(lines)
+    except Exception as e:
+        print(f"[!] metals.dev: ошибка — {e}")
+        return None
 
         def fmt(v):
             return f"{v:,.0f}".replace(",", " ") if v and v >= 100 else (f"{v:,.2f}" if v else "—")
@@ -353,7 +366,7 @@ def main():
     months = ["января","февраля","марта","апреля","мая","июня",
               "июля","августа","сентября","октября","ноября","декабря"]
     date_ru = f"{now_msk.day} {months[now_msk.month-1]} {now_msk.year}"
-    header = f"<b>🪙 AU &amp; AG — главное за день</b>  <b>{date_ru}</b>\n\n"
+    header = f"<b>🪙 AU &amp; AG — главное за день · {date_ru}</b>\n\n"
 
     channels = load_channels()
     sent = load_json(SENT_FILE, {"ids": []})
