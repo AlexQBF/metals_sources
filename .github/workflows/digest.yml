@@ -2,12 +2,11 @@ name: Daily Metals Digest
 
 on:
   schedule:
-    # 14:01 UTC = 17:01 МСК. Только будни (пн-пт): 1-5 в поле дня недели.
-    # В субботу и воскресенье бот не запускается (биржи закрыты, экономим лимит metals.dev).
+    # 14:01 UTC = 17:01 МСК, только будни (пн-пт). В сб/вс не запускается.
     # По понедельникам код сам расширяет окно сбора до 72ч (пятница-вечер + выходные).
-    # ВНИМАНИЕ: GitHub может запускать с задержкой в несколько часов — время прихода плавает.
+    # GitHub может запускать с задержкой в несколько часов — время прихода плавает.
     - cron: "1 14 * * 1-5"
-  workflow_dispatch:   # ручной запуск кнопкой Run workflow
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -16,17 +15,11 @@ jobs:
   build-digest:
     runs-on: ubuntu-latest
     steps:
-      - name: Получить код из репозитория
-        uses: actions/checkout@v4
-
-      - name: Установить Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      - name: Установить зависимости
-        run: pip install -r requirements.txt
-
+      - run: pip install -r requirements.txt
       - name: Запустить бота-дайджест
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -35,6 +28,14 @@ jobs:
           AI_BASE_URL: ${{ secrets.AI_BASE_URL }}
           AI_MODEL: ${{ secrets.AI_MODEL }}
           METALS_API_KEY: ${{ secrets.METALS_API_KEY }}
+        run: python digest.py
+      - name: Сохранить журналы и архив обратно в репозиторий
+        run: |
+          git config user.name "digest-bot"
+          git config user.email "bot@users.noreplymail.github.com"
+          git add sent.json recent_digests.json digests/ 2>/dev/null || true
+          git commit -m "Обновление журналов дайджеста $(date -u +%Y-%m-%d)" || echo "Нет изменений"
+          git push || echo "Нечего пушить"          METALS_API_KEY: ${{ secrets.METALS_API_KEY }}
         run: python digest.py
 
       - name: Сохранить журналы и архив обратно в репозиторий
