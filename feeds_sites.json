@@ -1,0 +1,12 @@
+{
+  "_comment": "RSS-ленты сайтов для тестового бота (золото/серебро). Отдельно от основного бота на ТГ-каналах. enabled=false временно отключает ленту.",
+  "feeds": [
+    { "name": "GoldMiningUnion",   "url": "https://goldminingunion.ru/news/rss",   "enabled": true },
+    { "name": "Золотой запас",      "url": "https://zolotoy-zapas.ru/rss",          "enabled": true },
+    { "name": "НедраДВ (сайт)",     "url": "https://nedradv.ru/nedradv/ru/rss",     "enabled": true },
+    { "name": "Metals Focus",       "url": "https://metalsfocus.com/rss",           "enabled": true },
+    { "name": "Silver Institute",   "url": "https://silverinstitute.org/rss",       "enabled": true },
+    { "name": "World Gold Council", "url": "https://gold.org/rss.xml",              "enabled": true },
+    { "name": "Mining.com",         "url": "https://mining.com/rss",                "enabled": true }
+  ]
+}
