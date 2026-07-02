@@ -2,10 +2,10 @@ name: Daily Metals Digest
 
 on:
   schedule:
-    # 14:01 UTC = 17:01 МСК, только будни (пн-пт). В сб/вс не запускается.
+    # 12:31 UTC = 15:31 МСК, только будни (пн-пт). В сб/вс не запускается.
     # По понедельникам код сам расширяет окно сбора до 72ч (пятница-вечер + выходные).
     # GitHub может запускать с задержкой в несколько часов — время прихода плавает.
-    - cron: "1 14 * * 1-5"
+    - cron: "31 12 * * 1-5"
   workflow_dispatch:
 
 permissions:
@@ -35,13 +35,4 @@ jobs:
           git config user.email "bot@users.noreplymail.github.com"
           git add sent.json recent_digests.json digests/ 2>/dev/null || true
           git commit -m "Обновление журналов дайджеста $(date -u +%Y-%m-%d)" || echo "Нет изменений"
-          git push || echo "Нечего пушить"          METALS_API_KEY: ${{ secrets.METALS_API_KEY }}
-        run: python digest.py
-
-      - name: Сохранить журналы и архив обратно в репозиторий
-        run: |
-          git config user.name "digest-bot"
-          git config user.email "bot@users.noreplymail.github.com"
-          git add sent.json recent_digests.json digests/ 2>/dev/null || true
-          git commit -m "Обновление журналов дайджеста $(date -u +%Y-%m-%d)" || echo "Нет изменений для коммита"
           git push || echo "Нечего пушить"
