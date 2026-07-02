@@ -233,7 +233,10 @@ AI_SYSTEM = (
     "ОЦЕНКА ВАЖНОСТИ: оцени значимость каждой новости для рынка золота/серебра и отрасли "
     "(масштаб, влияние на цены, размер компании/сделки, значимость для РФ и мира). "
     "Сначала самое важное, затем менее важное — строго по убыванию значимости. Проходное убирай.\n\n"
-    "Пунктов: от 6 до 8. Если действительно значимого меньше 6 — дай меньше, не добивай мусором.\n\n"
+    "Пунктов: от 6 до 8. Если действительно значимого меньше 6 — дай меньше, не добивай мусором.\n"
+    "ЛИМИТ ОБЪЁМА: весь дайджест должен уложиться примерно в 3300 символов с учётом HTML-тегов. "
+    "Если с 8 пунктами не влезаешь — оставь 7 или 6 САМЫХ ВАЖНЫХ с нормальными описаниями: "
+    "лучше меньше пунктов, чем все с обрезанными описаниями.\n\n"
     "ФОРМАТ каждого пункта:\n"
     "🔸 <b>Заголовок</b>\n"
     "Описание: обычно 2 предложения — первое про суть (что произошло), второе раскрывает важную "
@@ -332,6 +335,24 @@ def fetch_prices():
         return None
 
 
+
+def trim_to_one_message(header, body, tail):
+    """Если header+body+tail не влезает в одно сообщение Telegram,
+    отбрасываем пункты с конца (наименее важные — дайджест отсортирован по важности),
+    пока не влезет. Пункты разделены пустой строкой и начинаются с 🔸."""
+    LIMIT = 4000  # чуть ниже 4096 для запаса
+    def total_len(b):
+        return len(header) + len(b) + len(tail)
+    if total_len(body) <= LIMIT:
+        return body
+    # делим на пункты по маркеру
+    parts = [p for p in body.split("\n\n") if p.strip()]
+    while len(parts) > 1 and total_len("\n\n".join(parts)) > LIMIT:
+        removed = parts.pop()  # убираем последний (наименее важный)
+        print(f"[i] Дайджест не влезал в одно сообщение — убран последний пункт ({removed[:60]}…)")
+    return "\n\n".join(parts)
+
+
 def clean_html_for_telegram(text):
     text = re.sub(r"<\s*br\s*/?\s*>", "\n", text, flags=re.IGNORECASE)
     allowed = {"b", "i", "u", "s", "a", "code", "pre"}
@@ -393,12 +414,17 @@ def main():
         body = "За период существенных новостей по золоту и серебру не найдено."
 
     # котировки в конец (только если дайджест сформирован)
+    prices_block = ""
     if not ai_failed:
         prices = fetch_prices()
         if prices:
-            body = body + "\n" + prices
+            prices_block = "\n" + prices
 
-    send_to_telegram(header + body)
+    # гарантия одного сообщения: если не влезает — отбрасываем наименее важные пункты с конца
+    if not ai_failed:
+        body = trim_to_one_message(header, body, prices_block)
+
+    send_to_telegram(header + body + prices_block)
 
     new_ids = [] if ai_failed else [p["id"] for p in items if p["id"]]
     sent_ids.update(new_ids)
